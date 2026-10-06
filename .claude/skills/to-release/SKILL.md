@@ -1,6 +1,6 @@
 ---
 name: to-release
-description: Draft the Stage 5 release record for a production deploy: what ships, linked intents and specs, risk, manual steps and rollback plan, saved as a draft GitHub Release for the release owner. Use when the user says to-release.
+description: Draft the Stage 5 release record for a production deploy (what ships, linked intents and specs, risk, manual steps, rollback plan) as a draft GitHub Release for the release owner. Use when the user says to-release.
 disable-model-invocation: true
 ---
 
