@@ -167,7 +167,7 @@ Setup checklist:
 
 - [ ] Install the skills: `npx skills@latest add mattpocock/skills`, then run `/setup-matt-pocock-skills`
 - [ ] Add the to-intent team skill to `.claude/skills/to-intent/` (intent files go in `specs/`); the tracker configured by /setup-matt-pocock-skills holds specs and tickets
-- [ ] Write CLAUDE.md with build, test and typecheck commands, using writing-for-agents
+- [ ] Write CLAUDE.md with build, test and typecheck commands, using writing-for-agents. Add this line so Pocock's skills use our glossary name: "The domain glossary is GLOSSARY.md. Wherever a skill refers to CONTEXT.md, read and update GLOSSARY.md instead." Pocock's skills hard-code CONTEXT.md, so check after the first grill-with-docs run that no CONTEXT.md was created
 - [ ] Write CODING_STANDARDS.md and REVIEW.md
 - [ ] Add an intent.md template under `specs/_template/`
 - [ ] Add hooks: block protected paths, format on edit, block pushes to main
