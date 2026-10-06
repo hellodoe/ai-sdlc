@@ -4,7 +4,7 @@ Oct 2, 2026 · Dorin
 
 ## Summary
 
-This SDLC uses Anthropic's six-stage loop (Plan, Design, Build, Test, Deploy, Maintain) as the skeleton and Matt Pocock's skills as the working method inside each stage. Anthropic supplies the governance: a versioned artifact per stage, hooks that block what must never happen, evals, and humans at every approval gate. Pocock supplies the engineering discipline: grilling before building, tracer-bullet tickets, TDD at agreed seams, two-axis code review, and regular architecture cleanup.
+This SDLC uses Anthropic's six-stage loop (Plan, Design, Build, Test, Deploy, Maintain) as the skeleton and Matt Pocock's skills as the working method inside each stage. Anthropic supplies the governance: a versioned artifact per stage, hooks that block what must never happen, evals, and humans at every approval gate. Pocock supplies the engineering discipline: grilling before building, tracer-bullet tickets, TDD at agreed seams, two-axis code review, PR bodies written for human reviewers, session retros, and regular architecture cleanup.
 
 Five rules hold the whole thing together:
 
@@ -26,7 +26,7 @@ The two sources barely overlap: Anthropic defines the stages, artifacts and gate
 | Human role | Owns intent, approves gates, governs the loop | Answers the grilling, picks tickets, reviews output |
 | Gap it leaves | Says little about engineering craft inside Build | No gates, no enforcement, no deploy or ops stage |
 
-Anthropic's [security write-up](https://claude.com/blog/how-anthropic-secures-its-ai-native-software-development-lifecycle) adds risk tiering of the codebase, /security-review during coding, sandboxed agents with egress allowlists, and logging of every automated approval. Pocock's skills are installed with `npx skills@latest add mattpocock/skills` followed by a one-time `/setup-matt-pocock-skills` per repo, which configures the issue tracker, triage labels and doc locations.
+Anthropic's [security write-up](https://claude.com/blog/how-anthropic-secures-its-ai-native-software-development-lifecycle) adds risk tiering of the codebase, /security-review during coding, sandboxed agents with egress allowlists, and logging of every automated approval. Pocock's skills are installed with `npx skills@latest add mattpocock/skills` followed by a one-time `/setup-matt-pocock-skills` per repo, which configures the issue tracker, triage labels and doc locations. This version reflects Pocock's [v1.3 release](https://www.aihero.dev/skills-changelog-v13-implement-spec-pr-retro-and-glossary-md), which renamed CONTEXT.md to GLOSSARY.md, added implement-spec, pr and retro, and removed resolving-merge-conflicts.
 
 ## The six stages
 
@@ -40,10 +40,10 @@ Work flows clockwise; Maintain feeds new intents back into Plan, so the loop nev
 | --- | --- | --- | --- | --- | --- |
 | 1. Plan | Writes the ask in their own words; decides if it is worth doing | Triages inbound issues, interviews the requester until the intent is unambiguous | triage, grill-me, wait-what, to-questionnaire, then to-intent (team skill) to save the result | `specs/<slug>/intent.md` | **G1** Product owner approves intent |
 | 2. Design | Answers the grilling; settles trade-offs; policy owners review risky areas | Builds the domain model, researches, prototypes the open questions, writes the spec | grill-with-docs, domain-modeling, research, prototype, codebase-design, to-spec | Spec issue in the tracker, linked from intent.md; updated `GLOSSARY.md` | **G2** Owner approves spec; security or compliance owner signs if risk tier is high |
-| 3. Build | Corrects the ticket plan before code; runs 2 to 3 sessions in parallel | Splits the spec into tracer-bullet tickets, then implements one ticket per session with TDD | to-tickets (or wayfinder for multi-week work), implement, tdd, diagnosing-bugs, resolving-merge-conflicts, handoff | Tickets with blocking edges (this is Anthropic's plan.md), then commits | **G3** Engineer approves tickets before the first line of code |
+| 3. Build | Corrects the ticket plan before code; runs 2 to 3 sessions in parallel | Splits the spec into tracer-bullet tickets, then implements one ticket per session with TDD | to-tickets (or wayfinder for multi-week work), implement per ticket, or implement-spec for a whole low-risk spec, tdd, diagnosing-bugs, handoff | Tickets with blocking edges (this is Anthropic's plan.md), then commits | **G3** Engineer approves tickets before the first line of code |
 | 4. Test | Reviews only what survived automated checks | Runs typecheck, single tests, full suite, two-axis /code-review, /security-review, evals | tdd, code-review, then review-report (team skill) to save the result | Test files in the diff, CI test and coverage reports, review report comment on the PR | **G4** CI green, evals pass, no open Important findings |
-| 5. Deploy | Code owner approves the merge; release owner approves production | Opens the PR, addresses review comments, writes wizards for manual steps | code-review, wizard, then to-release (team skill) for the release record | Merged PR with review report and approval; draft GitHub Release from to-release; deployment record from CI | **G5** Human merge approval (the authoring agent can never approve). **G6** Release approval for production |
-| 6. Maintain | On-call triages findings; decides which become work | Diagnoses incidents, files new intents, scans for architecture decay every few days | diagnosing-bugs, improve-codebase-architecture, triage | New `intent.md`, new evals, CLAUDE.md rules | Loops back to G1 |
+| 5. Deploy | Code owner approves the merge; release owner approves production | Writes the PR body with pr (Summary, Evidence, Merge Danger), addresses review comments, writes wizards for manual steps | pr, wizard, then to-release (team skill) for the release record | Merged PR with review report and approval; draft GitHub Release from to-release; deployment record from CI | **G5** Human merge approval (the authoring agent can never approve). **G6** Release approval for production |
+| 6. Maintain | On-call triages findings; decides which become work | Diagnoses incidents, files new intents, runs retro after reviews and bug fixes, scans for architecture decay every few days | diagnosing-bugs, retro, improve-codebase-architecture, triage | New `intent.md`, new evals, CLAUDE.md rules | Loops back to G1 |
 
 Two Pocock skills sit outside the stages. **handoff** compacts a session into a document so the next session can continue a ticket. **ask-matt** routes to the right skill when nobody remembers which one fits.
 
@@ -55,6 +55,15 @@ Neither grill-me nor to-spec writes a repo file. grill-me only runs the intervie
 2. **Spec:** run grill-with-docs, then to-spec. The spec lives in the tracker, and the intent.md PR links to it. The product owner applying ready-for-agent is G2.
 
 Keeping the spec in the tracker follows the playbook's advice to name one system of record per artifact, and it is where to-tickets and code-review already look.
+
+### How Build runs: implement or implement-spec
+
+Pocock's v1.3 offers two ways to build an approved ticket plan, and the risk tier decides which one to use:
+
+1. **implement, one ticket per session.** Each ticket gets its own branch and PR. This is the default for medium and high risk tiers, because each PR stays small enough for a human to review at G5.
+2. **implement-spec, the whole spec in one run.** Claude creates an integration branch, explores the code, then runs one subagent per ticket in the order the blocking edges allow, merges them and runs /code-review on the whole branch. Use it for low-risk specs with a handful of tickets.
+
+implement-spec produces one large branch, so its PR is harder to review and its merge conflicts land at the end. Keep it out of auth, payments and data-deletion code, and split a spec rather than let one PR grow past what a code owner can review in one sitting.
 
 ### How the Test artifacts get written
 
@@ -70,15 +79,19 @@ The report is a PR comment rather than a repo file, so it sits next to the diff 
 
 Deploy has two gates, and each leaves a record:
 
-1. **G5 merge:** the merged PR is the artifact. It already carries the review report, the human approval and the CI results.
-2. **G6 release:** run **to-release**, a third team skill. It drafts a release record for each production deploy and saves it as a draft GitHub Release. The record lists every PR that ships with its intent, spec, risk tier, approver and review verdict. It also flags PRs missing an approval or a Ready report, lists risky changes with a rollback for each, and links a wizard script for manual steps.
+1. **G5 merge:** the merged PR is the artifact. It carries the PR body Pocock's pr skill writes (Summary, Evidence with a before and after, and Merge Danger: how reversible the change is and its blast radius), the review report, the human approval and the CI results.
+2. **G6 release:** run **to-release**, a third team skill. It drafts a release record for each production deploy and saves it as a draft GitHub Release. The record lists every PR that ships with its intent, spec, risk tier, approver and review verdict. It also flags PRs missing an approval or a Ready report, lists risky changes, starting from each PR's Merge Danger section, with a rollback for each, and links a wizard script for manual steps.
 3. **Deploy log:** CI deploys through the production GitHub environment, which records each deploy against its commit and waits for the release owner's approval.
 
 The release owner reads the draft, approves the production environment, then publishes the release. The skill never deploys, publishes or approves anything.
 
+### How Maintain improves the environment
+
+Pocock's retro closes the loop Anthropic describes, where a mistake seen twice becomes a CLAUDE.md rule. Run it after each review report and after each diagnosing-bugs fix. It looks at the session, not the code, and proposes changes to CLAUDE.md, coding standards, automatable checks and tooling. It changes nothing on its own: the SDLC steward decides which proposals to apply, and an applied change to CLAUDE.md, a skill or a hook reruns the evals before it merges.
+
 ## Skill-to-stage map
 
-Every skill in the repo has a home; only teach is optional. "User" skills are run as slash commands; "Model" skills Claude picks up on its own.
+Every skill in Pocock's v1.3 release has a home, plus our three team skills; only teach is optional. resolving-merge-conflicts was removed in v1.3 because conflicts are now handled by the harness. "User" skills are run as slash commands; "Model" skills Claude picks up on its own.
 
 | Skill | Stage | Invoked by | Use it when |
 | --- | --- | --- | --- |
@@ -86,23 +99,28 @@ Every skill in the repo has a home; only teach is optional. "User" skills are ru
 | ask-matt | Any | User | You are unsure which skill fits |
 | triage | 1 Plan, 6 Maintain | User | Moving inbound issues through triage states |
 | grill-me / grilling | 1 Plan | User / Model | The ask is vague; Claude interviews until every branch is resolved. Writes no file, so run to-intent next |
-| wait-what | 1 Plan | User | A stakeholder message is unclear; re-pitch it in plain words |
+| to-intent | 1 Plan | Team skill | Saving the grilled ask as specs/SLUG/intent.md and opening the G1 PR |
+| wait-what | 1 Plan | User | A stakeholder message is unclear; re-pitch it in plain words using GLOSSARY.md terms |
 | to-questionnaire | 1 Plan, 2 Design | User | A decision needs async input from people not in the session |
 | grill-with-docs | 2 Design | User | Aligning on requirements while updating GLOSSARY.md |
-| domain-modeling | 2 Design | Model | Terms are fuzzy or overloaded |
+| domain-modeling | 2 Design | Model | Terms are fuzzy or overloaded, or someone edits GLOSSARY.md |
 | research | 2 Design | Model | A question needs primary sources and a cited answer |
 | prototype | 2 Design | Model | A design question is cheaper to answer with throwaway code |
 | codebase-design | 2 Design, 3 Build | Model | Choosing seams and module boundaries; these become the TDD seams |
 | to-spec | 2 Design | User | Turning the design discussion into a spec issue in the tracker, labelled ready-for-agent |
 | to-tickets | 3 Build | User | Turning the spec issue into tracer-bullet tickets with blocking edges |
 | wayfinder | 3 Build | User | Work spans many sessions and needs a decision map |
-| implement | 3 Build | User | Building one ticket; it drives tdd and code-review |
+| implement | 3 Build | User | Building one ticket; it drives tdd and code-review. Default for medium and high risk tiers |
+| implement-spec | 3 Build | User | Building a whole low-risk spec in one run on an integration branch, with subagents per ticket and one /code-review at the end |
 | tdd | 3 Build, 4 Test | Model | Writing code at an agreed seam, red-green-refactor |
-| diagnosing-bugs | 3 Build, 6 Maintain | Model | Anything is broken: reproduce, minimise, hypothesise, instrument, fix |
-| resolving-merge-conflicts | 3 Build | Model | A branch conflicts with main |
+| diagnosing-bugs | 3 Build, 6 Maintain | Model | Anything is broken: reproduce, minimise, hypothesise, instrument, fix. Follow with retro |
 | handoff | 3 Build | User | Ending a session mid-ticket |
-| code-review | 4 Test, 5 Deploy | Model | Before every PR: Standards axis and Spec axis. Output stays in chat, so review-report runs it and saves the result |
+| code-review | 4 Test | Model | Before every PR: Standards axis and Spec axis. Output stays in chat, so review-report runs it and saves the result |
+| review-report | 4 Test | Team skill | Posting the G4 review report on the PR |
+| pr | 5 Deploy | Model | Writing the PR body: Summary, Evidence (before and after), Merge Danger |
 | wizard | 5 Deploy | Model | A release has manual steps a human must run; to-release calls it |
+| to-release | 5 Deploy | Team skill | Drafting the G6 release record as a draft GitHub Release |
+| retro | 6 Maintain | User | After code-review or a bug fix: finds what in CLAUDE.md, checks or tooling would have prevented the friction. Proposes only |
 | improve-codebase-architecture | 6 Maintain | User | Every few days, to catch entropy before it compounds |
 | writing-for-agents | Setup | Model | Writing CLAUDE.md, REVIEW.md and skills |
 | teach | Optional | User | Onboarding a person onto the codebase |
@@ -119,7 +137,7 @@ With 10 developers, every gate keeps a separate human owner, but most roles are 
 | Policy owners | One developer each for security and for data or compliance | G2 on high-risk specs | Also own the matching policy skill and hooks |
 | Release owner | Weekly rotation | G6 | Approves production deploys and runs any wizard steps |
 | On-call | Weekly rotation, can be the same person as release owner | Maintain | Triages monitoring findings and turns the real ones into intent.md |
-| SDLC steward | One developer, rotating monthly | None | Owns CLAUDE.md, REVIEW.md, evals and hooks; reviews eval pass rates and samples automated approvals |
+| SDLC steward | One developer, rotating monthly | None | Owns CLAUDE.md, REVIEW.md, evals and hooks; reviews eval pass rates, samples automated approvals, and decides which retro proposals to apply |
 
 Plan for review becoming the bottleneck. Ten developers running 2 to 3 sessions each can open 20 or more PRs a day, so keep PRs to one tracer-bullet ticket each, let Claude's review clear the Nits before a human looks, and reserve human review time each day rather than reviewing between tasks.
 
@@ -166,8 +184,9 @@ The spec is not a repo file: to-spec publishes it as a tracker issue, and to-tic
 Setup checklist:
 
 - [ ] Install the skills: `npx skills@latest add mattpocock/skills`, then run `/setup-matt-pocock-skills`
+    - [ ] Use Pocock's skills v1.3 or later (`npx skills update`), which name the glossary GLOSSARY.md. An older repo migrates with `git mv CONTEXT.md GLOSSARY.md`, and any leftover resolving-merge-conflicts folder is deleted
 - [ ] Add the to-intent team skill to `.claude/skills/to-intent/` (intent files go in `specs/`); the tracker configured by /setup-matt-pocock-skills holds specs and tickets
-- [ ] Write CLAUDE.md with build, test and typecheck commands, using writing-for-agents. Add this line so Pocock's skills use our glossary name: "The domain glossary is GLOSSARY.md. Wherever a skill refers to CONTEXT.md, read and update GLOSSARY.md instead." Pocock's skills hard-code CONTEXT.md, so check after the first grill-with-docs run that no CONTEXT.md was created
+- [ ] Write CLAUDE.md with build, test and typecheck commands, using writing-for-agents
 - [ ] Write CODING_STANDARDS.md and REVIEW.md
 - [ ] Add an intent.md template under `specs/_template/`
 - [ ] Add hooks: block protected paths, format on edit, block pushes to main
@@ -183,7 +202,7 @@ Roll it out in Anthropic's four steps, starting wherever work stalls today: slow
 1. **Manual loop.** Run the stages by hand on one real feature: grill-me, to-spec, to-tickets, implement. Save intent.md with to-intent and publish the spec issue with to-spec. Write CLAUDE.md and GLOSSARY.md as you go.
 2. **Enforcement.** Add Claude PR review against REVIEW.md, the protected-path and production hooks, branch protection, and your first policy skill (for example a secure-API skill).
 3. **Automation.** Let a committed intent.md or a spec issue labelled ready-for-agent kick off the next stage. Run 2 to 3 parallel sessions per engineer, one ticket each. Turn on evals in CI.
-4. **Closed loop.** Monitoring opens intent.md files on its own, incidents become evals, and improve-codebase-architecture runs on a schedule.
+4. **Closed loop.** Monitoring opens intent.md files on its own, incidents become evals, improve-codebase-architecture runs on a schedule, and retro runs after every review and bug fix.
 
 Measure each stage with one leading and one lagging number, taken from the playbook:
 

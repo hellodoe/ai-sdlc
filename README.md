@@ -1,6 +1,6 @@
 # AI-Native SDLC
 
-An SDLC for a 10-developer team that combines Anthropic's AI-Native SDLC Playbook (stages, artifacts, human gates, hooks, evals) with Matt Pocock's [skills](https://github.com/mattpocock/skills) (grilling, tracer-bullet tickets, TDD, two-axis code review).
+An SDLC for a 10-developer team that combines Anthropic's AI-Native SDLC Playbook (stages, artifacts, human gates, hooks, evals) with Matt Pocock's [skills](https://github.com/mattpocock/skills) v1.3 (grilling, tracer-bullet tickets, implement or implement-spec, TDD, two-axis code review, PR bodies, retros).
 
 - [docs/ai-native-sdlc-pocock.md](docs/ai-native-sdlc-pocock.md): the full SDLC definition
 - [docs/ai-native-sdlc-pocock.pdf](docs/ai-native-sdlc-pocock.pdf): the same, as PDF
