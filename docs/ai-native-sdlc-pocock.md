@@ -41,7 +41,7 @@ Work flows clockwise; Maintain feeds new intents back into Plan, so the loop nev
 | 1. Plan | Writes the ask in their own words; decides if it is worth doing | Triages inbound issues, interviews the requester until the intent is unambiguous | triage, grill-me, wait-what, to-questionnaire, then to-intent (team skill) to save the result | `specs/<slug>/intent.md` | **G1** Product owner approves intent |
 | 2. Design | Answers the grilling; settles trade-offs; policy owners review risky areas | Builds the domain model, researches, prototypes the open questions, writes the spec | grill-with-docs, domain-modeling, research, prototype, codebase-design, to-spec | Spec issue in the tracker, linked from intent.md; updated `CONTEXT.md` | **G2** Owner approves spec; security or compliance owner signs if risk tier is high |
 | 3. Build | Corrects the ticket plan before code; runs 2 to 3 sessions in parallel | Splits the spec into tracer-bullet tickets, then implements one ticket per session with TDD | to-tickets (or wayfinder for multi-week work), implement, tdd, diagnosing-bugs, resolving-merge-conflicts, handoff | Tickets with blocking edges (this is Anthropic's plan.md), then commits | **G3** Engineer approves tickets before the first line of code |
-| 4. Test | Reviews only what survived automated checks | Runs typecheck, single tests, full suite, two-axis /code-review, /security-review, evals | tdd, code-review | Diff, tests, review report, green CI | **G4** CI green, evals pass, no open Important findings |
+| 4. Test | Reviews only what survived automated checks | Runs typecheck, single tests, full suite, two-axis /code-review, /security-review, evals | tdd, code-review, then review-report (team skill) to save the result | Test files in the diff, CI test and coverage reports, review report comment on the PR | **G4** CI green, evals pass, no open Important findings |
 | 5. Deploy | Code owner approves the merge; release owner approves production | Opens the PR, addresses review comments, writes wizards for manual steps | code-review, wizard | Merged PR, release record | **G5** Human merge approval (the authoring agent can never approve). **G6** Release approval for production |
 | 6. Maintain | On-call triages findings; decides which become work | Diagnoses incidents, files new intents, scans for architecture decay every few days | diagnosing-bugs, improve-codebase-architecture, triage | New `intent.md`, new evals, CLAUDE.md rules | Loops back to G1 |
 
@@ -55,6 +55,16 @@ Neither grill-me nor to-spec writes a repo file. grill-me only runs the intervie
 2. **Spec:** run grill-with-docs, then to-spec. The spec lives in the tracker, and the intent.md PR links to it. The product owner applying ready-for-agent is G2.
 
 Keeping the spec in the tracker follows the playbook's advice to name one system of record per artifact, and it is where to-tickets and code-review already look.
+
+### How the Test artifacts get written
+
+Pocock's tdd writes test files, but code-review and /security-review only report in chat. Stage 4 therefore keeps three artifacts:
+
+1. **Tests:** the test files tdd writes are committed in the diff. The test plan they follow is the Testing Decisions section of the spec issue that to-spec writes.
+2. **Test run:** CI saves a JUnit XML and coverage report with every build, and the PR links to them.
+3. **Review report:** run **review-report**, a second team skill. It runs typecheck, the full suite, /code-review and /security-review, then posts one PR comment with the G4 checklist, the tests added, findings ranked Important or Nit, and a verdict. A rerun edits the same comment, and the skill never approves the PR.
+
+The report is a PR comment rather than a repo file, so it sits next to the diff it judges and adds no file to every PR.
 
 ## Skill-to-stage map
 
@@ -81,7 +91,7 @@ Every skill in the repo has a home; only teach is optional. "User" skills are ru
 | diagnosing-bugs | 3 Build, 6 Maintain | Model | Anything is broken: reproduce, minimise, hypothesise, instrument, fix |
 | resolving-merge-conflicts | 3 Build | Model | A branch conflicts with main |
 | handoff | 3 Build | User | Ending a session mid-ticket |
-| code-review | 4 Test, 5 Deploy | Model | Before every PR: Standards axis and Spec axis |
+| code-review | 4 Test, 5 Deploy | Model | Before every PR: Standards axis and Spec axis. Output stays in chat, so review-report runs it and saves the result |
 | wizard | 5 Deploy | Model | A release has manual steps a human must run |
 | improve-codebase-architecture | 6 Maintain | User | Every few days, to catch entropy before it compounds |
 | writing-for-agents | Setup | Model | Writing CLAUDE.md, REVIEW.md and skills |
@@ -112,7 +122,7 @@ A gate passes only on a human decision or a deterministic check, never on a skil
 | G1 Intent | intent.md states the problem, who has it and what done looks like, in the requester's words | Product owner | PR to `specs/` with CODEOWNERS on that folder |
 | G2 Spec | The spec issue is approved; CONTEXT.md is updated; high-risk areas signed by their policy owner | Product owner, plus security or compliance owner by risk tier | Only the product owner may apply the ready-for-agent label; risk tier label |
 | G3 Plan | Tickets are thin vertical slices with blocking edges and named TDD seams | Engineer | Tickets moved to Ready in the tracker |
-| G4 Verified | Typecheck, full suite and evals green; /code-review and /security-review have no open Important findings | CI | Required status checks |
+| G4 Verified | Typecheck, full suite and evals green; /code-review and /security-review have no open Important findings; the review report says Ready for human review | CI | Required status checks |
 | G5 Merge | A human code owner approves; Claude's review informs but never approves | Code owner | Branch protection, required reviewers |
 | G6 Release | Production deploy is authorised | Release owner | Deploy hook or environment protection rule |
 
@@ -137,7 +147,7 @@ REVIEW.md                  # what Claude's PR review checks and how it ranks sev
 specs/<slug>/intent.md     # Stage 1, written by to-intent, approved at G1
 evals/                     # 20 to 50 real past tasks
 .claude/settings.json      # hooks and permissions
-.claude/skills/            # Pocock skills plus to-intent and your policy skills
+.claude/skills/            # Pocock skills plus to-intent, review-report and your policy skills
 .github/CODEOWNERS         # owners for specs/, auth, payments, infra
 ```
 
@@ -152,7 +162,7 @@ Setup checklist:
 - [ ] Add an intent.md template under `specs/_template/`
 - [ ] Add hooks: block protected paths, format on edit, block pushes to main
 - [ ] Turn on branch protection with required CI checks and a required code owner review
-- [ ] Add Claude PR review in CI (Claude Code GitHub Action or Code Review)
+- [ ] Add the review-report team skill, Claude PR review in CI (Claude Code GitHub Action or Code Review), and JUnit XML plus coverage uploads as CI build artifacts
 - [ ] Collect the first 20 eval tasks from recently merged PRs and run them in CI
 - [ ] Label risk tiers in CODEOWNERS and the deploy pipeline
 
