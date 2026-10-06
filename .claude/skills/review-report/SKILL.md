@@ -19,14 +19,14 @@ Produce the Stage 4 (Test) artifact of our SDLC: one review report per PR, poste
    - typecheck: pass or fail, with the number of errors
    - full test suite: passed, failed, skipped; coverage for changed files if the repo reports it
    - tests added or changed in this diff: list the test files and the seams they cover
-3. **Run /code-review** against the base. Keep its two reports (Standards, Spec) as they come.
-4. **Run /security-review** on the diff.
+3. **Code review.** Call the Skill tool with "code-review" against the base. Keep its two reports (Standards, Spec) as they come. If the branch came from implement-spec, review the whole integration branch.
+4. **Security review.** Call the Skill tool with "security-review" on the diff.
 5. **Rank findings.** Each finding gets a severity: Important (blocks G4) or Nit (does not). Use REVIEW.md's definitions when it exists. Note which findings you fixed during this run and which remain open.
 6. **Write the report** with the template below. Keep it under 600 words; link to CI logs rather than pasting them.
 7. **Publish it.**
    - If a PR exists: post it with `gh pr comment`. If a previous comment contains the marker `review-report:v1`, edit that comment instead of adding a new one.
    - If no PR exists yet: print the report and tell the user it will be posted when the PR opens.
-8. Tell the user the verdict in one line and what blocks G4, if anything.
+8. Tell the user the verdict in one line and what blocks G4, if anything. Suggest running retro next, so friction from this session improves CLAUDE.md and the checks.
 
 Do not approve the PR. The report informs the human code owner; it never replaces their approval.
 

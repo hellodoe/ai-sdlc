@@ -20,8 +20,8 @@ This skill only drafts. It never deploys, never publishes the release, and never
    - the review-report verdict, from the comment marked `review-report:v1`
    - risk tier label, if any
    Flag any PR with no human approval or no Ready review report. Do not drop it silently.
-3. **Find risky changes.** Look for database migrations, config or infra changes, feature flags, new environment variables, and dependency upgrades in the range.
-4. **Manual steps.** If any change needs steps a human must run, use the wizard skill to generate a script for them and link it.
+3. **Find risky changes.** Start from the Merge Danger section of each PR body (written by Pocock's pr skill). Then look for database migrations, config or infra changes, feature flags, new environment variables, and dependency upgrades in the range.
+4. **Manual steps.** If any change needs steps a human must run, call the Skill tool with "wizard" to generate a script for them and link it.
 5. **Rollback plan.** For each risky change, say how to undo it: revert commit, flag off, down-migration, or "forward-fix only" with the reason.
 6. **Write the record** with the template below, keeping it under one page.
 7. **Save it** as a draft: `gh release create <version> --draft --target <sha> --title "<version>" --notes-file <file>`. If the draft for this version already exists, update its notes instead.
