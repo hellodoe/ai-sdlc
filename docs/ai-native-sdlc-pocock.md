@@ -39,7 +39,7 @@ Work flows clockwise; Maintain feeds new intents back into Plan, so the loop nev
 | Stage | Human does | Claude does | Pocock skills | Artifact | Exit gate |
 | --- | --- | --- | --- | --- | --- |
 | 1. Plan | Writes the ask in their own words; decides if it is worth doing | Triages inbound issues, interviews the requester until the intent is unambiguous | triage, grill-me, wait-what, to-questionnaire, then to-intent (team skill) to save the result | `specs/<slug>/intent.md` | **G1** Product owner approves intent |
-| 2. Design | Answers the grilling; settles trade-offs; policy owners review risky areas | Builds the domain model, researches, prototypes the open questions, writes the spec | grill-with-docs, domain-modeling, research, prototype, codebase-design, to-spec | Spec issue in the tracker, linked from intent.md; updated `CONTEXT.md` | **G2** Owner approves spec; security or compliance owner signs if risk tier is high |
+| 2. Design | Answers the grilling; settles trade-offs; policy owners review risky areas | Builds the domain model, researches, prototypes the open questions, writes the spec | grill-with-docs, domain-modeling, research, prototype, codebase-design, to-spec | Spec issue in the tracker, linked from intent.md; updated `GLOSSARY.md` | **G2** Owner approves spec; security or compliance owner signs if risk tier is high |
 | 3. Build | Corrects the ticket plan before code; runs 2 to 3 sessions in parallel | Splits the spec into tracer-bullet tickets, then implements one ticket per session with TDD | to-tickets (or wayfinder for multi-week work), implement, tdd, diagnosing-bugs, resolving-merge-conflicts, handoff | Tickets with blocking edges (this is Anthropic's plan.md), then commits | **G3** Engineer approves tickets before the first line of code |
 | 4. Test | Reviews only what survived automated checks | Runs typecheck, single tests, full suite, two-axis /code-review, /security-review, evals | tdd, code-review, then review-report (team skill) to save the result | Test files in the diff, CI test and coverage reports, review report comment on the PR | **G4** CI green, evals pass, no open Important findings |
 | 5. Deploy | Code owner approves the merge; release owner approves production | Opens the PR, addresses review comments, writes wizards for manual steps | code-review, wizard, then to-release (team skill) for the release record | Merged PR with review report and approval; draft GitHub Release from to-release; deployment record from CI | **G5** Human merge approval (the authoring agent can never approve). **G6** Release approval for production |
@@ -88,7 +88,7 @@ Every skill in the repo has a home; only teach is optional. "User" skills are ru
 | grill-me / grilling | 1 Plan | User / Model | The ask is vague; Claude interviews until every branch is resolved. Writes no file, so run to-intent next |
 | wait-what | 1 Plan | User | A stakeholder message is unclear; re-pitch it in plain words |
 | to-questionnaire | 1 Plan, 2 Design | User | A decision needs async input from people not in the session |
-| grill-with-docs | 2 Design | User | Aligning on requirements while updating CONTEXT.md |
+| grill-with-docs | 2 Design | User | Aligning on requirements while updating GLOSSARY.md |
 | domain-modeling | 2 Design | Model | Terms are fuzzy or overloaded |
 | research | 2 Design | Model | A question needs primary sources and a cited answer |
 | prototype | 2 Design | Model | A design question is cheaper to answer with throwaway code |
@@ -130,7 +130,7 @@ A gate passes only on a human decision or a deterministic check, never on a skil
 | Gate | Passes when | Who decides | Enforced by |
 | --- | --- | --- | --- |
 | G1 Intent | intent.md states the problem, who has it and what done looks like, in the requester's words | Product owner | PR to `specs/` with CODEOWNERS on that folder |
-| G2 Spec | The spec issue is approved; CONTEXT.md is updated; high-risk areas signed by their policy owner | Product owner, plus security or compliance owner by risk tier | Only the product owner may apply the ready-for-agent label; risk tier label |
+| G2 Spec | The spec issue is approved; GLOSSARY.md is updated; high-risk areas signed by their policy owner | Product owner, plus security or compliance owner by risk tier | Only the product owner may apply the ready-for-agent label; risk tier label |
 | G3 Plan | Tickets are thin vertical slices with blocking edges and named TDD seams | Engineer | Tickets moved to Ready in the tracker |
 | G4 Verified | Typecheck, full suite and evals green; /code-review and /security-review have no open Important findings; the review report says Ready for human review | CI | Required status checks |
 | G5 Merge | A human code owner approves; Claude's review informs but never approves | Code owner | Branch protection, required reviewers |
@@ -151,7 +151,7 @@ One repo layout serves both sources: the artifacts Anthropic asks for live where
 
 ```
 CLAUDE.md                  # conventions, commands, mistakes Claude made twice
-CONTEXT.md                 # domain language, kept current by grill-with-docs
+GLOSSARY.md                # domain language, kept current by grill-with-docs
 CODING_STANDARDS.md        # Standards axis for /code-review
 REVIEW.md                  # what Claude's PR review checks and how it ranks severity
 specs/<slug>/intent.md     # Stage 1, written by to-intent, approved at G1
@@ -180,7 +180,7 @@ Setup checklist:
 
 Roll it out in Anthropic's four steps, starting wherever work stalls today: slow reviews mean start at Deploy, vague asks mean start at Plan.
 
-1. **Manual loop.** Run the stages by hand on one real feature: grill-me, to-spec, to-tickets, implement. Save intent.md with to-intent and publish the spec issue with to-spec. Write CLAUDE.md and CONTEXT.md as you go.
+1. **Manual loop.** Run the stages by hand on one real feature: grill-me, to-spec, to-tickets, implement. Save intent.md with to-intent and publish the spec issue with to-spec. Write CLAUDE.md and GLOSSARY.md as you go.
 2. **Enforcement.** Add Claude PR review against REVIEW.md, the protected-path and production hooks, branch protection, and your first policy skill (for example a secure-API skill).
 3. **Automation.** Let a committed intent.md or a spec issue labelled ready-for-agent kick off the next stage. Run 2 to 3 parallel sessions per engineer, one ticket each. Turn on evals in CI.
 4. **Closed loop.** Monitoring opens intent.md files on its own, incidents become evals, and improve-codebase-architecture runs on a schedule.

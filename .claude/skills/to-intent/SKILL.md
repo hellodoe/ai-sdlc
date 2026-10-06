@@ -14,7 +14,7 @@ Do NOT interview the user. Synthesize what is already in the conversation. If so
 
 1. Pick a short kebab-case slug for the work (for example `bulk-invoice-export`). If `specs/<slug>/` already exists, ask the user whether to update it or choose another slug.
 2. If `specs/_template/intent.md` exists, follow its headings. Otherwise use the template below.
-3. Write `specs/<slug>/intent.md`. Use the requester's own words for the problem wherever possible. Use the terms in `CONTEXT.md` when it exists.
+3. Write `specs/<slug>/intent.md`. Use the requester's own words for the problem wherever possible. Use the terms in `GLOSSARY.md` when it exists.
 4. Keep it under one page. It states the problem and what done looks like; it does not design the solution. Design belongs in to-spec.
 5. Create a branch `intent/<slug>`, commit the file, push, and open a PR titled `Intent: <one-line summary>`. Request review from the product owner if CODEOWNERS names one for `specs/`.
 6. Tell the user the PR link and the next step: after approval, run grill-with-docs then to-spec, and link the resulting spec issue back into intent.md.
